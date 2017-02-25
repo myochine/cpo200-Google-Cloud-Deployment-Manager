@@ -1,0 +1,41 @@
+# Copyright 2016 Google Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{% set INSTANCE = env["deployment"] %}
+{% set ADDRESS = env["deployment"] + "-address" %}
+{% set SQL_NAME = env["deployment"] + "-sql" %}
+
+resources:
+- name: {{ INSTANCE }}
+  type: vm_instance.py
+  properties:
+    zone: {{ properties["zone"] }}
+    machine: {{ properties["machine-type"] }}
+    sql_ip: $(ref.{{ SQL_NAME }}.ipAddresses[0].ipAddress)
+    sql_pw: {{ properties["sql-password"] }}
+    startup_script_url: {{ properties["startup-script-url"] }}
+    image: {{ properties["image"] }}
+    nat_IP: $(ref.{{ ADDRESS }}.address)
+
+- name: {{ ADDRESS }}
+  type: address.py
+  properties:
+    compute-region: {{ properties["compute-region"] }}
+
+- name: {{ SQL_NAME }}
+  type: sql_instance.py
+  properties:
+    sql-region: {{ properties["sql-region"] }}
+    name: {{ SQL_NAME }}
+    address: $(ref.{{ ADDRESS }}.address)
